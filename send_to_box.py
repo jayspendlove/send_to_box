@@ -13,27 +13,31 @@ sys.argv[1]
 **python3 send_to_box.py "t1.txt"
 
 TODO:
-- in binary??
-- do I have to open the file to send it?
-- access folder id of not the root
 - test for zip file
-- stupid proof it
-    *No command line options "No file indicated"
-    *file not valid
 - generate test files 
 
 
 '''
 import sys
+import os.path
+from os import path
 from boxsdk import DevelopmentClient
 
 if __name__ == "__main__":
+    '''check that file name argument has been given in command line'''
+    if(len(sys.argv) < 2):
+        raise ValueError("Additional argument needed in command line--file name")
     file_name= sys.argv[1]
-    path = "/home/jay/Documents/Codes/GB/" + file_name 
+
+    '''check that argument given is a file in given directory'''
+    if (path.exists(file_name) == False):
+        raise FileNotFoundError ("File chosen for upload does not exist in this directory")
+    file_path = "/home/jay/Documents/Codes/GB/send_to_box/" + file_name 
     client = DevelopmentClient()
 
     '''option for folder function is the folder ID for 'test_GB_file_uploads' in Box'''
-    client.folder('88895453960').upload(path)
+    folder_id = '88895453960'
+    client.folder(folder_id).upload(file_path)
 
     '''this line of code can be used to get the folder ID of folder in the root folder
     client.folder('0').get()
