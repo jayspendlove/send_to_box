@@ -1,4 +1,4 @@
-#!usr/bin/env python3
+#!/usr/bin/python3
 '''
     Author: Jay Spendlove
     email: jayclark24@gmail.com
@@ -21,11 +21,19 @@ TODO:
 
 '''
 import sys
-import os.path
 from os import path
-from boxsdk import DevelopmentClient
+from boxsdk import Client,JWTAuth
+import json
+
 
 if __name__ == "__main__":
+    config_args = None
+    with open('config.json') as f:
+       config_args = json.load(f)
+
+    auth = JWTAuth(**config_args)
+    access_token = auth.authenticate_instance()
+
     '''check that file name argument has been given in command line'''
     if len(sys.argv) < 2:
         raise ValueError("Additional argument needed in command line--file name")
@@ -36,12 +44,11 @@ if __name__ == "__main__":
         raise FileNotFoundError ("File chosen for upload does not exist in this directory")
     file_path = "/home/jay/Documents/Codes/GB/send_to_box/" + file_name 
 
-    client = DevelopmentClient()
+    client = Client(auth)
 
     '''option for folder function is the folder ID for 'test_GB_file_uploads' in Box'''
     folder_id = '88895453960'
-    client.folder(folder_id).upload(file_path)
+    client.folder('0').upload(file_path)
 
-    '''this line of code can be used to get the folder ID of folder in the root folder
-    print(client.folder('0').get())
-    '''
+    '''this line of code can be used to get the folder ID of folder in the root folder'''
+    #print(client.folder('0').get())
