@@ -1,0 +1,8 @@
+{
+  "client_id": "ilxfnio81190d3drzig0sx8zaj539aw7",
+  "client_secret": "mQDMudGPclL7ISX5jb7PFNp7f83Q1QEY",
+  "jwt_key_id": "jhpcp5ui",
+  "rsa_private_key_file_sys_path": "certificate.pm",
+  "rsa_private_key_passphrase": "4fbf22f989cbff25a6d2965e15f34bbe",
+  "enterprise_id": "259125861"
+}
