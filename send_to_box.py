@@ -19,105 +19,51 @@ from os import path
 from boxsdk import Client, JWTAuth
 from boxsdk.exception import BoxAPIException
 
+def check_arguments():
+    '''
+    check if command line argument for file name was inputted correctly.
+    raises exception for any error
+    '''
+    if len(sys.argv) < 2:
+        raise ValueError("Additional argument needed in command line--file name")
+    check_file_exists(sys.argv[1])
+    if len(sys.argv) > 2:
+        check_file_exists(sys.argv[2])
+
+def check_file_exists(file_name):
+    '''
+    checks to make sure file name exists in given directory
+    raises exception if file does not exist
+    '''
+    if not path.exists(file_name):
+        raise FileNotFoundError ("File chosen for upload does not exist in this directory")
+
 class SendToBox (object):
-    client = None
-    file_name = None
-    file_path = None
 
-    def upload_file(self):
-        '''
-        function that puts together all the individual functions to successfully 
-        upload file
-        '''
-        #log = self.config_log_file()
-        auth_args = self.config_authentication_args()
-        authorization = self.authenticate(auth_args)
-        file_name = self.check_arguments()
-        self.check_file_exists(file_name)
-        client, file_path = self.prepare_for_upload(authorization, file_name)
-        status = self.ensure_successful_upload(client, file_name, file_path)
+    def __init__(self, config_filename='config.json'):
+        self.client = None
+        self.config_filename = config_filename
+        self.authenticate()
 
-        return status
+    def authenticate (self):
+        '''
+        JWT authentication
+        '''
+        auth = JWTAuth.from_settings_file(self.config_filename)
+        access_token = auth.authenticate_instance()
+        self.client = Client(auth)
 
-    def config_log_file(self):
-        '''
-        DOES NOT WORK RIGHT NOW, ADVANCED IMPLEMENTATION OF log_failure
-        function to configure a log file
-        '''
-        formatter=logging.Formatter('%(asctime)s [%(levelname)]%(message)s, datefmt="%m/%d/%y %H:%M:%S"')
-        fh = logging.FileHandler('a_failed_uploads.log')
-        fh.setFormatter(formatter)
-        logging.getLogger().addHandler(fh)
-        logging.getLogger().setLevel(logging.ERROR)
-
-        return logging
-
-    def config_authentication_args (self):
-        '''
-        get configuration arguments from config.json for use in authentication process
-        returns configuration arguments for authentication
-        '''
-        config_args = None
-        config_args = JWTAuth.from_settings_file('/home/jay/Documents/Codes/GB/send_to_box/new_config.json')
-        
-        return config_args
-
-    def authenticate (self, auth_args):
-        '''
-        authenticate in preparation for file upload
-        returns authorization information
-        '''
-        access_token = auth_args.authenticate_instance()
-        return auth_args
-
-    def check_arguments(self):
-        '''
-        check if command line argument for file name was inputted correctly.
-        Returns file name if correct, Will raise exception if not.
-        '''
-        if len(sys.argv) < 2:
-            raise ValueError("Additional argument needed in command line--file name")
-        f_name= sys.argv[1]
-        return f_name
-
-    def check_file_exists(self, file_name):
-        '''
-        checks to make sure file name exists in given directory
-        returns True if file exists, raises exception if not
-        '''
-        if not path.exists(file_name):
-            raise FileNotFoundError ("File chosen for upload does not exist in this directory")
-        return True
-
-    def prepare_for_upload(self, authorization, file_name):
-        '''
-        prepares for upload by declaring Client object and putting value in 
-        file_name variable
-        Returns file_path
-        '''
-        client = Client(authorization)
-        f_path = "/home/jay/Documents/Codes/GB/send_to_box/" + file_name
-        return client,f_path
-
-    def ensure_successful_upload(self, client, file_name, file_path):
+    def upload_file(self, filename):
         '''
         using a try will attempt to upload file to box. If successful, will delete the file
         from local system. If unsuccessful, will log error message to log file and 
         NOT delete the file
-        returns True or False based on status of upload
         '''
         try:
-            print("THis works right?")
-            box_file = client.folder('0').upload(file_path, preflight_check = True)
-            print("but will this?")
+            box_file = self.client.folder('0').upload(filename, preflight_check = True)
+            os.remove(filename)
         except BoxAPIException as err:
-            print("aha!")
-            self.log_failure(file_name, err)
-            #return False
-            pass
-        else:
-            os.remove(file_path)
-            #return True
+            self.log_failure(filename, err)
     
     def log_failure(self, file_name, err):
         log_file_name = "failed_uploads.log"
@@ -128,5 +74,9 @@ class SendToBox (object):
         return
 
 if __name__ == "__main__":
-    s1 = SendToBox()
-    s1.upload_file()
+    check_arguments()
+    if len(sys.argv) > 2:
+        s1 = SendToBox(sys.argv[2])
+    else:
+        s1 = SendToBox()
+    s1.upload_file(sys.argv[1])
