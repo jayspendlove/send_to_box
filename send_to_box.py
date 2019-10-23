@@ -6,6 +6,12 @@
     delete the file if uploaded correctly, or log if not uploaded correctly
     **NOTE: This script implements a send_to_box CLASS versus straight script
     as in auto_send_to_box.py**
+
+TODO:
+    -gitignore- get private info off of github
+    -combine confic_auth_args and authentication functions
+    -get rid of access token?
+
 '''
 
 import os, sys, logging, datetime, json, cProfile
@@ -53,9 +59,7 @@ class SendToBox (object):
         '''
         config_args = None
         config_args = JWTAuth.from_settings_file('/home/jay/Documents/Codes/GB/send_to_box/new_config.json')
-        #with open('config.json') as f:
-            #config_args = json.load(f)
-
+        
         return config_args
 
     def authenticate (self, auth_args):
@@ -63,10 +67,8 @@ class SendToBox (object):
         authenticate in preparation for file upload
         returns authorization information
         '''
-        #auth = JWTAuth(**auth_args)
-        auth = auth_args
-        access_token = auth.authenticate_instance()
-        return auth
+        access_token = auth_args.authenticate_instance()
+        return auth_args
 
     def check_arguments(self):
         '''
@@ -108,19 +110,20 @@ class SendToBox (object):
             print("THis works right?")
             box_file = client.folder('0').upload(file_path, preflight_check = True)
             print("but will this?")
-        except BoxAPIException:
+        except BoxAPIException as err:
             print("aha!")
-            self.log_failure(file_name)
+            self.log_failure(file_name, err)
             #return False
             pass
         else:
             os.remove(file_path)
             #return True
     
-    def log_failure(self, file_name):
+    def log_failure(self, file_name, err):
         log_file_name = "failed_uploads.log"
         logging.basicConfig(filename=log_file_name, level=logging.ERROR)
         l1=logging.getLogger(file_name)
+        l1.error(f"File failed to upload:\n {err}\n")
 
         return
 
