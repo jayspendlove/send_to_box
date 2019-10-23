@@ -8,7 +8,7 @@
     as in auto_send_to_box.py**
 '''
 
-import os, sys, logging, datetime, json
+import os, sys, logging, datetime, json, cProfile
 from os import path
 from boxsdk import Client, JWTAuth
 from boxsdk.exception import BoxAPIException
@@ -52,8 +52,9 @@ class SendToBox (object):
         returns configuration arguments for authentication
         '''
         config_args = None
-        with open('config.json') as f:
-            config_args = json.load(f)
+        config_args = JWTAuth.from_settings_file('/home/jay/Documents/Codes/GB/send_to_box/new_config.json')
+        #with open('config.json') as f:
+            #config_args = json.load(f)
 
         return config_args
 
@@ -62,7 +63,8 @@ class SendToBox (object):
         authenticate in preparation for file upload
         returns authorization information
         '''
-        auth = JWTAuth(**auth_args)
+        #auth = JWTAuth(**auth_args)
+        auth = auth_args
         access_token = auth.authenticate_instance()
         return auth
 
@@ -103,14 +105,17 @@ class SendToBox (object):
         returns True or False based on status of upload
         '''
         try:
+            print("THis works right?")
             box_file = client.folder('0').upload(file_path, preflight_check = True)
-        except BoxAPIException :            
+            print("but will this?")
+        except BoxAPIException:
+            print("aha!")
             self.log_failure(file_name)
-            return False
+            #return False
             pass
         else:
             os.remove(file_path)
-            return True
+            #return True
     
     def log_failure(self, file_name):
         log_file_name = "failed_uploads.log"
